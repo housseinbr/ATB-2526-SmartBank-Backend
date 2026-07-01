@@ -10,5 +10,3 @@ public class Atb2526SmartBankApplication {
         System.out.println("hello");
 	}
 }
-
-

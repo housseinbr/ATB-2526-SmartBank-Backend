@@ -9,6 +9,4 @@ public class Atb2526SmartBankApplication {
 		SpringApplication.run(Atb2526SmartBankApplication.class, args);
         System.out.println("hello");
 	}
-
-
 }

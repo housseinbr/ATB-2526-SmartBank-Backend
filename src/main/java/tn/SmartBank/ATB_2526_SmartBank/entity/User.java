@@ -1,4 +1,5 @@
 package tn.SmartBank.ATB_2526_SmartBank.entity;
+import tn.SmartBank.ATB_2526_SmartBank.Enums.Role;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -21,7 +22,9 @@ public class User {
     @Column(unique = true, nullable = false)
     private String cin;
 
-    private String name;
+
+    @Column(name = "first_name")
+    private String firstName;
 
     @Column(name = "last_name")
     private String lastName;
@@ -47,12 +50,14 @@ public class User {
     private String sexe;
 
     // Varchar in the diagram - e.g. "EMPLOYE" / "SUPERVISEUR" / "ADMIN"
-    private String role;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false)
+    private Role role;
 
     private Double solde;
 
     // Self-referencing supervisor relationship, nullable
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_superviseur", nullable = true)
+    @JoinColumn(name = "id_superviseur", nullable = true)// kenou user.emplye oila user.supervieur dima andhom supervisor sinn admine tkoun andou null el atribut hethy
     private User superviseur;
 }

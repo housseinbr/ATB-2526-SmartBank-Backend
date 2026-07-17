@@ -1,4 +1,6 @@
 package tn.SmartBank.ATB_2526_SmartBank.entity;
+import tn.SmartBank.ATB_2526_SmartBank.Enums.DemiJournee;
+import tn.SmartBank.ATB_2526_SmartBank.Enums.Type_abs;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -23,7 +25,9 @@ public class Abcence {
     private User user;
 
     // Enum in diagram - e.g. "CONGE_PAYE" / "MALADIE" / "SANS_SOLDE"
-    private String type;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", nullable = false)
+    private Type_abs type;
 
     @Column(columnDefinition = "TEXT")
     private String comment;
@@ -33,6 +37,10 @@ public class Abcence {
 
     @Column(name = "date_end")
     private LocalDate dateEnd;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "demi_journee")
+    private DemiJournee demiJournee;
 
     // Enum in diagram, labelled "A voir" - e.g. "EN_ATTENTE" / "VALIDEE" / "REJETEE"
     private String status;

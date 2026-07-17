@@ -21,9 +21,6 @@ public class Address {
     @JoinColumn(name = "id_user", nullable = false)
     private User user;
 
-    // Enum in diagram - e.g. "PERSONNELLE" / "PROFESSIONNELLE"
-    private String type;
-
     private String country;
 
     private String ville;

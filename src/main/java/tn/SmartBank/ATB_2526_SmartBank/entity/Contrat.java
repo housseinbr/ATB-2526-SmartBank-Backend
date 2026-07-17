@@ -1,4 +1,5 @@
 package tn.SmartBank.ATB_2526_SmartBank.entity;
+import tn.SmartBank.ATB_2526_SmartBank.Enums.*;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -22,11 +23,13 @@ public class Contrat {
     @JoinColumn(name = "id_user", nullable = false)
     private User user;
 
-    private String nature;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "nature")
+    private Nature_Contrat nature;
 
-    // Enum in diagram - e.g. "CDI" / "CDD" / "STAGE"
+    @Enumerated(EnumType.STRING)
     @Column(name = "type_contra")
-    private String typeContra;
+    private Type_Contrat typeContra;
 
     @Column(name = "date_start")
     private LocalDate dateStart;
@@ -34,18 +37,20 @@ public class Contrat {
     @Column(name = "date_end")
     private LocalDate dateEnd;
 
-    // Enum in diagram - e.g. "TEMPS_PLEIN" / "TEMPS_PARTIEL"
+    @Enumerated(EnumType.STRING)
     @Column(name = "type_temp")
-    private String typeTemp;
+    private Type_Temp typeTemp;
 
     @Column(name = "date_affectation")
     private LocalDate dateAffectation;
 
-    // Enum in diagram
-    private String post;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "post")
+    private Post post;
 
-    // Enum in diagram
-    private String emploi;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "emploi")
+    private Emploi emploi;
 
     private Double taux;
 

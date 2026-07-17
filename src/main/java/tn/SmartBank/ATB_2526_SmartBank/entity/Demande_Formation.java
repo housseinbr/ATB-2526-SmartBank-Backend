@@ -26,11 +26,6 @@ public class Demande_Formation {
     @JoinColumn(name = "id_user", nullable = false)
     private User user;
 
-    // Link to the generic Demande record, if you keep one row per request there too
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_demande")
-    private Demande demande;
-
     // Enum in diagram - e.g. "EN_ATTENTE" / "ACCEPTEE" / "REFUSEE"
     private String status;
 

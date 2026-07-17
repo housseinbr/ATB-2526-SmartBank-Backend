@@ -21,8 +21,6 @@ public class Mobilite {
     private String pays;
 
     private String societe;
-
-    // Enum in diagram
     private String domain;
 
     private String emploi;

@@ -2,6 +2,8 @@ package tn.SmartBank.ATB_2526_SmartBank.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import tn.SmartBank.ATB_2526_SmartBank.Enums.Status_Notification;
+
 import java.time.LocalDate;
 
 @Entity
@@ -30,5 +32,5 @@ public class Notification {
     private String text;
 
     // Enum in diagram - e.g. "LU" / "NON_LU"
-    private String status;
+    private Status_Notification status;
 }

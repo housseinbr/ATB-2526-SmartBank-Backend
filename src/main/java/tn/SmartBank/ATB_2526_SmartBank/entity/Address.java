@@ -25,7 +25,7 @@ public class Address {
 
     private String ville;
 
-    private String goverment;
+    private String government;
 
     @Column(name = "document_link")
     private String documentLink;

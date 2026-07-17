@@ -15,7 +15,7 @@ public class Bank_Account {
     // One-to-one with User: Id_User acts as PK in the diagram
     @Id
     @Column(name = "id_user")
-    private Long idUser;
+    private Long idAccount;
 
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId

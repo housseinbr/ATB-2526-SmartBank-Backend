@@ -56,6 +56,8 @@ public class User {
 
     private Double solde;
 
+    private Double salaire;
+
     // Self-referencing supervisor relationship, nullable
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_superviseur", nullable = true)// kenou user.emplye oila user.supervieur dima andhom supervisor sinn admine tkoun andou null el atribut hethy

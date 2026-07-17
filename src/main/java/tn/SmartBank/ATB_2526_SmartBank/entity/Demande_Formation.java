@@ -2,6 +2,8 @@ package tn.SmartBank.ATB_2526_SmartBank.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import tn.SmartBank.ATB_2526_SmartBank.Enums.Status;
+
 import java.time.LocalDate;
 
 @Entity
@@ -26,8 +28,9 @@ public class Demande_Formation {
     @JoinColumn(name = "id_user", nullable = false)
     private User user;
 
-    // Enum in diagram - e.g. "EN_ATTENTE" / "ACCEPTEE" / "REFUSEE"
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private Status status;
 
     private LocalDate date;
 }

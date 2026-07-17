@@ -1,9 +1,9 @@
 package tn.SmartBank.ATB_2526_SmartBank.entity;
-import tn.SmartBank.ATB_2526_SmartBank.Enums.*;
 
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
+import tn.SmartBank.ATB_2526_SmartBank.Enums.*;
 
 @Entity
 @Table(name = "contrat")

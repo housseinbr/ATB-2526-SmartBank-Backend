@@ -21,11 +21,7 @@ public class Formation {
 
     @Column(name = "offre_formation")
     private String offreFormation;
-
-    // Enum in diagram
     private String domain;
-
-    // Enum in diagram
     private String theme;
 
     private Integer duree;

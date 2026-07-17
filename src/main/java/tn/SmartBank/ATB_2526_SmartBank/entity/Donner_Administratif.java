@@ -2,6 +2,8 @@ package tn.SmartBank.ATB_2526_SmartBank.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import tn.SmartBank.ATB_2526_SmartBank.Enums.*;
+
 import java.time.LocalDate;
 
 @Entity
@@ -24,16 +26,17 @@ public class Donner_Administratif {
 
     // Enum in diagram
     @Column(name = "situation_employe")
-    private String situationEmploye;
+    private SituationEmploye situationEmploye;
 
     @Column(name = "cathegorie_situation")
-    private String cathegorieSituation;
+    private CathegorieSituation  cathegorieSituation;
 
     // Enum in diagram
-    private String classification;
-
+    @Enumerated(EnumType.STRING)
+    private Classification classification;
     // Enum in diagram
-    private String qualification;
+    @Enumerated(EnumType.STRING)
+    private Qualification qualification;
 
     @Column(name = "date_inscrit")
     private LocalDate dateInscrit;

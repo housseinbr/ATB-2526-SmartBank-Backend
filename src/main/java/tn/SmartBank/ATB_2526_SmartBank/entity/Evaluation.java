@@ -2,6 +2,8 @@ package tn.SmartBank.ATB_2526_SmartBank.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import tn.SmartBank.ATB_2526_SmartBank.Enums.Status;
+
 import java.time.LocalDate;
 
 @Entity
@@ -31,6 +33,6 @@ public class Evaluation {
 
     private String lieu;
 
-    // Enum in diagram
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private Status status;
 }

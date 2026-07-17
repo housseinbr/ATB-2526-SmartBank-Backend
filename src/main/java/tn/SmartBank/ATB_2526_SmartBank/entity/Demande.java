@@ -1,4 +1,5 @@
 package tn.SmartBank.ATB_2526_SmartBank.entity;
+import tn.SmartBank.ATB_2526_SmartBank.Enums.*;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -22,11 +23,14 @@ public class Demande {
     @JoinColumn(name = "id_user", nullable = false)
     private User user;
 
-    // Enum in diagram - e.g. "CONGE" / "MOBILITE" / "FORMATION"
-    private String type;
+    // Enum in diagram - e.g. "ATTESTATION" / "BADGES"
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", nullable = false)
+    private Type_Demande type;
 
     private LocalDate date;
 
-    // Enum in diagram - e.g. "EN_ATTENTE" / "ACCEPTEE" / "REFUSEE"
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private Status status;
 }

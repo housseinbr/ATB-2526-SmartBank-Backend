@@ -2,6 +2,7 @@ package tn.SmartBank.ATB_2526_SmartBank.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import tn.SmartBank.ATB_2526_SmartBank.Enums.SituationFamiliale;
 
 @Entity
 @Table(name = "familly_situation")
@@ -26,5 +27,6 @@ public class Familly_situation {
     private String situation;
 
     @Column(name = "document_upload")
-    private String documentUpload;
+    @Enumerated(EnumType.STRING)
+    private SituationFamiliale documentUpload;
 }

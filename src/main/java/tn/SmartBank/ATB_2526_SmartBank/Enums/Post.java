@@ -1,0 +1,13 @@
+package tn.SmartBank.ATB_2526_SmartBank.Enums;
+
+public enum Post {
+    CAISSIER,
+    CONSEILLER_CLIENTELE,
+    CHARGE_CLIENTELE,
+    GESTIONNAIRE_COMPTE,
+    ANALYSTE_CREDIT,
+    DIRECTEUR_AGENCE,
+    RESPONSABLE_RH,
+    INFORMATICIEN,
+    AUTRE
+}

@@ -1,6 +1,6 @@
 package tn.SmartBank.ATB_2526_SmartBank.entity;
-import tn.SmartBank.ATB_2526_SmartBank.Enums.DemiJournee;
-import tn.SmartBank.ATB_2526_SmartBank.Enums.Type_abs;
+import tn.SmartBank.ATB_2526_SmartBank.Enums.*;
+
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -43,5 +43,7 @@ public class Abcence {
     private DemiJournee demiJournee;
 
     // Enum in diagram, labelled "A voir" - e.g. "EN_ATTENTE" / "VALIDEE" / "REJETEE"
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private Status status;
 }

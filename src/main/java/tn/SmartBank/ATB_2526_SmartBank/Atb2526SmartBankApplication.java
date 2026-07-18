@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class Atb2526SmartBankApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(Atb2526SmartBankApplication.class, args);
-        System.out.println("hello");
+        System.out.println("Main");
 	}
 }
 

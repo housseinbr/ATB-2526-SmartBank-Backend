@@ -11,6 +11,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -72,6 +73,21 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
+    @PatchMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserResponse> toggleActive(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> body) {  // ← String, pas Boolean
+        User user = userService.getUserById(id);
+        String newStatus = body.get("actif");
+        if (!"actif".equals(newStatus) && !"inactif".equals(newStatus)) {
+            return ResponseEntity.badRequest().build();
+        }
+        user.setActif(newStatus);
+        User updated = userService.updateUser(id, user);
+        return ResponseEntity.ok(UserResponse.fromEntity(updated));
+    }
+
     @PatchMapping("/{idUser}/superviseur/{idSuperviseur}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponse> assignSuperviseur(
@@ -86,4 +102,21 @@ public class UserController {
         userService.changePassword(id, newPassword);
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserResponse> updateStatus(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> body) {
+        User user = userService.getUserById(id);
+        String newStatus = body.get("actif");
+        if (!"actif".equals(newStatus) && !"inactif".equals(newStatus)) {
+            return ResponseEntity.badRequest().build();
+        }
+        user.setActif(newStatus);
+        User updated = userService.updateUser(id, user);
+        return ResponseEntity.ok(UserResponse.fromEntity(updated));
+    }
+
+
 }

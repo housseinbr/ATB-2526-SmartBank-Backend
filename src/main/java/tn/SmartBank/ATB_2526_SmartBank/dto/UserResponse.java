@@ -10,7 +10,6 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 
-// Ne contient jamais le mot de passe - c'est la forme sûre à renvoyer au frontend
 @Getter
 @Setter
 @Builder
@@ -30,6 +29,7 @@ public class UserResponse {
     private Double solde;
     private Double salaire;
     private Long idSuperviseur;
+    private String actif;  // ← CHANGÉ : String (pas boolean)
 
     public static UserResponse fromEntity(User user) {
         return UserResponse.builder()
@@ -47,6 +47,7 @@ public class UserResponse {
                 .solde(user.getSolde())
                 .salaire(user.getSalaire())
                 .idSuperviseur(user.getSuperviseur() != null ? user.getSuperviseur().getId() : null)
+                .actif(user.getActif())  // ← Maintenant ça compile : String → String
                 .build();
     }
 }

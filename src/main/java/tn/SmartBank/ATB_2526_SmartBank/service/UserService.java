@@ -9,6 +9,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import tn.SmartBank.ATB_2526_SmartBank.entity.User;
+import tn.SmartBank.ATB_2526_SmartBank.repository.UserRepository;
+
+import java.security.SecureRandom;
 import java.util.List;
 
 @Service
@@ -18,16 +22,40 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService; // ← service mail à créer
 
+    private static final String CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+    private static final int PWD_LENGTH = 12;
+
+    @Transactional
     public User createUser(User user) {
+        // Vérifier unicité email/CIN
         if (userRepository.existsByEmail(user.getEmail())) {
-            throw new RuntimeException("Un utilisateur avec cet email existe déjà : " + user.getEmail());
+            throw new RuntimeException("Email déjà utilisé");
         }
         if (userRepository.existsByCin(user.getCin())) {
-            throw new RuntimeException("Un utilisateur avec ce CIN existe déjà : " + user.getCin());
+            throw new RuntimeException("CIN déjà utilisé");
         }
-        user.setPwd(passwordEncoder.encode(user.getPwd()));
-        return userRepository.save(user);
+
+        // Générer mot de passe aléatoire
+        String rawPassword = generateRandomPassword();
+        user.setPwd(passwordEncoder.encode(rawPassword));
+
+        User saved = userRepository.save(user);
+
+        // Envoyer le mot de passe par mail
+        emailService.sendPasswordEmail(saved.getEmail(), saved.getFirstName(), rawPassword);
+
+        return saved;
+    }
+
+    private String generateRandomPassword() {
+        SecureRandom random = new SecureRandom();
+        StringBuilder sb = new StringBuilder(PWD_LENGTH);
+        for (int i = 0; i < PWD_LENGTH; i++) {
+            sb.append(CHARS.charAt(random.nextInt(CHARS.length())));
+        }
+        return sb.toString();
     }
 
 

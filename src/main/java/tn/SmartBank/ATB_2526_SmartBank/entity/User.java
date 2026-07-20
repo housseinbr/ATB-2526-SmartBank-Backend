@@ -58,6 +58,9 @@ public class User {
 
     private Double salaire;
 
+    @Column(nullable = false)
+    private String actif = "actif";  // "actif" ou "inactif"
+
     // Self-referencing supervisor relationship, nullable
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_superviseur", nullable = true)// kenou user.emplye oila user.supervieur dima andhom supervisor sinn admine tkoun andou null el atribut hethy

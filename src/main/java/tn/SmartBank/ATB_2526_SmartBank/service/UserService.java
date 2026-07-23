@@ -62,25 +62,24 @@ public class UserService {
     public User updateUser(Long id, User user) {
         User existing = getUserById(id);
 
-        existing.setFirstName(user.getFirstName());
-        existing.setLastName(user.getLastName());
-        existing.setUseName(user.getUseName());
-        existing.setNumTel(user.getNumTel());
-        existing.setNumFax(user.getNumFax());
-        existing.setBirthday(user.getBirthday());
-        existing.setSexe(user.getSexe());
-        existing.setRole(user.getRole());
-        existing.setSolde(user.getSolde());
-        existing.setSalaire(user.getSalaire());
+        if (user.getFirstName() != null) existing.setFirstName(user.getFirstName());
+        if (user.getLastName() != null) existing.setLastName(user.getLastName());
+        if (user.getUseName() != null) existing.setUseName(user.getUseName());
+        if (user.getNumTel() != null) existing.setNumTel(user.getNumTel());
+        if (user.getNumFax() != null) existing.setNumFax(user.getNumFax());
+        if (user.getBirthday() != null) existing.setBirthday(user.getBirthday());
+        if (user.getSexe() != null) existing.setSexe(user.getSexe());
+        if (user.getRole() != null) existing.setRole(user.getRole());
+        if (user.getSolde() != null) existing.setSolde(user.getSolde());
+        if (user.getSalaire() != null) existing.setSalaire(user.getSalaire());
 
-        // email et cin : mis à jour uniquement s'ils changent, avec re-vérification d'unicité
-        if (!existing.getEmail().equals(user.getEmail())) {
+        if (user.getEmail() != null && !existing.getEmail().equals(user.getEmail())) {
             if (userRepository.existsByEmail(user.getEmail())) {
                 throw new RuntimeException("Un utilisateur avec cet email existe déjà : " + user.getEmail());
             }
             existing.setEmail(user.getEmail());
         }
-        if (!existing.getCin().equals(user.getCin())) {
+        if (user.getCin() != null && !existing.getCin().equals(user.getCin())) {
             if (userRepository.existsByCin(user.getCin())) {
                 throw new RuntimeException("Un utilisateur avec ce CIN existe déjà : " + user.getCin());
             }
@@ -93,6 +92,16 @@ public class UserService {
 
     public void deleteUser(Long id) {
         User user = getUserById(id);
+
+        // Si l'utilisateur est superviseur d'une équipe, détacher ses subordonnés
+        List<User> subordonnes = userRepository.findBySuperviseur_Id(id);
+        if (!subordonnes.isEmpty()) {
+            for (User subordonne : subordonnes) {
+                subordonne.setSuperviseur(null);
+            }
+            userRepository.saveAll(subordonnes);
+        }
+
         userRepository.delete(user);
     }
 
@@ -138,13 +147,23 @@ public class UserService {
 
     public User assignSuperviseur(Long idUser, Long idSuperviseur) {
         User user = getUserById(idUser);
-        User superviseur = getUserById(idSuperviseur);
 
-        if (superviseur.getRole() != Role.SUPERVISEUR && superviseur.getRole() != Role.ADMIN) {
-            throw new RuntimeException("L'utilisateur désigné n'a pas le rôle SUPERVISEUR ou ADMIN.");
+        // Retirer le superviseur
+        if (idSuperviseur == null || idSuperviseur == 0) {
+            user.setSuperviseur(null);
+            return userRepository.save(user);
         }
+
+        // Vérifier qu'on n'assigne pas l'utilisateur à lui-même
         if (idUser.equals(idSuperviseur)) {
             throw new RuntimeException("Un utilisateur ne peut pas être son propre superviseur.");
+        }
+
+        User superviseur = getUserById(idSuperviseur);
+
+        // Vérifier que le superviseur a le bon rôle
+        if (superviseur.getRole() != Role.SUPERVISEUR && superviseur.getRole() != Role.ADMIN) {
+            throw new RuntimeException("L'utilisateur désigné n'a pas le rôle SUPERVISEUR ou ADMIN.");
         }
 
         user.setSuperviseur(superviseur);

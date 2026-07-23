@@ -1,9 +1,16 @@
 package tn.SmartBank.ATB_2526_SmartBank.entity;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import tn.SmartBank.ATB_2526_SmartBank.Enums.Role;
 
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDate;
+import java.util.Collection;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -13,7 +20,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class User {
+public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,7 +28,6 @@ public class User {
 
     @Column(unique = true, nullable = false)
     private String cin;
-
 
     @Column(name = "first_name")
     private String firstName;
@@ -46,10 +52,8 @@ public class User {
 
     private LocalDate birthday;
 
-    // Varchar in the diagram - kept as String (e.g. "M" / "F")
     private String sexe;
 
-    // Varchar in the diagram - e.g. "EMPLOYE" / "SUPERVISEUR" / "ADMIN"
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
     private Role role;
@@ -59,10 +63,29 @@ public class User {
     private Double salaire;
 
     @Column(nullable = false)
-    private String actif = "actif";  // "actif" ou "inactif"
+    private String actif = "actif";
 
-    // Self-referencing supervisor relationship, nullable
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_superviseur", nullable = true)// kenou user.emplye oila user.supervieur dima andhom supervisor sinn admine tkoun andou null el atribut hethy
+    @JoinColumn(name = "id_superviseur", nullable = true)
     private User superviseur;
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority("ROLE_" + this.role.name()));
+    }
+
+    @Override
+    public String getPassword() {
+        return this.pwd;
+    }
+
+    @Override
+    public String getUsername() {
+        return this.email;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return "actif".equalsIgnoreCase(this.actif);
+    }
 }

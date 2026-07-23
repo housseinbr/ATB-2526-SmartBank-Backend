@@ -60,7 +60,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('EMPLOYE') or hasRole('SUPERVISEUR') or hasRole('ADMIN')")
     public ResponseEntity<UserResponse> updateUser(@PathVariable Long id, @RequestBody User user) {
         User updated = userService.updateUser(id, user);
         return ResponseEntity.ok(UserResponse.fromEntity(updated));
@@ -89,11 +89,12 @@ public class UserController {
     }
 
     @PatchMapping("/{idUser}/superviseur/{idSuperviseur}")
-    @PreAuthorize("hasRole('ADMIN')")
+    //@PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponse> assignSuperviseur(
             @PathVariable Long idUser,
             @PathVariable Long idSuperviseur) {
-        User updated = userService.assignSuperviseur(idUser, idSuperviseur);
+        User updated = userService.assignSuperviseur(idUser,
+                idSuperviseur == 0 ? null : idSuperviseur);
         return ResponseEntity.ok(UserResponse.fromEntity(updated));
     }
 

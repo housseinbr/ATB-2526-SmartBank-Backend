@@ -174,6 +174,25 @@ public class UserService {
     public User changePassword(Long id, String newPassword) {
         User user = getUserById(id);
         user.setPwd(passwordEncoder.encode(newPassword));
-        return userRepository.save(user);
+        User saved = userRepository.save(user);
+
+        emailService.sendPasswordChangedEmail(saved.getEmail(), saved.getFirstName());
+
+        return saved;
     }
+
+
+
+    public void forgotPassword(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Aucun compte associé à cet email"));
+
+        String newPassword = generateRandomPassword();
+        user.setPwd(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        emailService.sendForgotPasswordEmail(user.getEmail(), user.getFirstName(), newPassword);
+    }
+
+
 }

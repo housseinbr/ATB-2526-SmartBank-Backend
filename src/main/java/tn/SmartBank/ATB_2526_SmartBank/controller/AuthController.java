@@ -1,12 +1,14 @@
 package tn.SmartBank.ATB_2526_SmartBank.controller;
 
 import tn.SmartBank.ATB_2526_SmartBank.dto.AuthResponse;
+import tn.SmartBank.ATB_2526_SmartBank.dto.ForgotPasswordRequest;
 import tn.SmartBank.ATB_2526_SmartBank.dto.LoginRequest;
 import tn.SmartBank.ATB_2526_SmartBank.dto.RegisterRequest;
 import tn.SmartBank.ATB_2526_SmartBank.entity.User;
 import tn.SmartBank.ATB_2526_SmartBank.repository.UserRepository;
 import tn.SmartBank.ATB_2526_SmartBank.security.JwtUtils;
 import tn.SmartBank.ATB_2526_SmartBank.security.UserDetailsImpl;
+import tn.SmartBank.ATB_2526_SmartBank.service.UserService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +34,7 @@ public class AuthController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
+    private final UserService userService;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
@@ -101,5 +104,16 @@ public class AuthController {
                 .build();
 
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        try {
+            userService.forgotPassword(request.getEmail());
+            return ResponseEntity.ok(Map.of("message", "Un nouveau mot de passe a été envoyé."));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", e.getMessage()));
+        }
     }
 }

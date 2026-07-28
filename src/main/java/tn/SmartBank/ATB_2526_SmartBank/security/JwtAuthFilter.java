@@ -32,6 +32,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
 
         final String authHeader = request.getHeader("Authorization");
+        log.info("Authorization header present for {}: {}", request.getRequestURI(), authHeader != null);
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             log.warn("Pas de header Authorization Bearer pour {}", request.getRequestURI());

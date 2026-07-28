@@ -2,6 +2,7 @@ package tn.SmartBank.ATB_2526_SmartBank.config;
 
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.http.HttpMethod;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -88,10 +89,10 @@ public class SecurityConfig {
                         })
                 )
                 .authorizeHttpRequests(auth -> auth
+
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/employe/**").hasAnyRole("SUPERVISEUR", "EMPLOYE")
-                        .requestMatchers("/api/abcences").hasAnyRole("EMPLOYE", "SUPERVISEUR", "ADMIN")
                         .requestMatchers("/api/abcences/**").hasAnyRole("EMPLOYE", "SUPERVISEUR", "ADMIN") // ← AJOUTE CECI
                         .anyRequest().authenticated()
                 )

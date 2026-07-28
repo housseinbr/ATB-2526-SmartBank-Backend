@@ -1,5 +1,6 @@
 package tn.SmartBank.ATB_2526_SmartBank.entity;
 import tn.SmartBank.ATB_2526_SmartBank.Enums.*;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 
 import jakarta.persistence.*;
@@ -8,6 +9,7 @@ import java.time.LocalDate;
 
 @Entity
 @Table(name = "abcence")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Getter
 @Setter
 @NoArgsConstructor

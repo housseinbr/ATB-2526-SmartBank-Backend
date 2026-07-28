@@ -23,10 +23,11 @@ public class AbcenceController {
 
     // CREATE — lie automatiquement l'absence à l'utilisateur connecté
     @PostMapping
-    public ResponseEntity<Abcence> create(@RequestBody Abcence abcence, Authentication authentication) {
+    public ResponseEntity<Void> create(@RequestBody Abcence abcence, Authentication authentication) {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         abcence.setUser(buildUserRef(userDetails.getId()));
-        return ResponseEntity.status(HttpStatus.CREATED).body(absenceService.create(abcence));
+        absenceService.create(abcence);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     // GET ALL — un employé ne voit que SES absences ; admin/superviseur voit tout
@@ -55,7 +56,8 @@ public class AbcenceController {
             @RequestBody Abcence abcence,
             Authentication authentication) {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        return ResponseEntity.ok(absenceService.update(id, abcence, userDetails.getId()));
+        absenceService.update(id, abcence, userDetails.getId());
+        return ResponseEntity.noContent().build();
     }
 
     // DELETE

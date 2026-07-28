@@ -1,5 +1,6 @@
 package tn.SmartBank.ATB_2526_SmartBank.config;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -69,23 +70,29 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((req, res, authEx) -> {
+                            res.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401 si non authentifié
+                            res.getWriter().write("{\"error\":\"Non authentifié\"}");
+                        })
+                        .accessDeniedHandler((req, res, accessEx) -> {
+                            res.setStatus(HttpServletResponse.SC_FORBIDDEN); // 403 si pas les droits
+                            res.getWriter().write("{\"error\":\"Accès refusé\"}");
+                        })
+                )
                 .authorizeHttpRequests(auth -> auth
-                        // routes publiques
                         .requestMatchers("/api/auth/**").permitAll()
-
-                        // routes réservées à l'ADMIN
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-
-                        // routes réservées à SUPERVISEUR + ADMIN
                         .requestMatchers("/api/employe/**").hasAnyRole("SUPERVISEUR", "EMPLOYE")
-
-                        // tout le reste nécessite juste d'être authentifié
+                        .requestMatchers("/api/abcences").hasAnyRole("EMPLOYE", "SUPERVISEUR", "ADMIN")
+                        .requestMatchers("/api/abcences/**").hasAnyRole("EMPLOYE", "SUPERVISEUR", "ADMIN") // ← AJOUTE CECI
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())

@@ -5,9 +5,19 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import tn.SmartBank.ATB_2526_SmartBank.Enums.Status;
+import tn.SmartBank.ATB_2526_SmartBank.dto.AbcenceResponse;
+import tn.SmartBank.ATB_2526_SmartBank.dto.HistorySoldResponse;
 import tn.SmartBank.ATB_2526_SmartBank.entity.Abcence;
-import tn.SmartBank.ATB_2526_SmartBank.entity.User;
 import tn.SmartBank.ATB_2526_SmartBank.security.UserDetailsImpl;
 import tn.SmartBank.ATB_2526_SmartBank.service.AbsenceService;
 
@@ -21,57 +31,85 @@ public class AbcenceController {
 
     private final AbsenceService absenceService;
 
-    // CREATE — lie automatiquement l'absence à l'utilisateur connecté
     @PostMapping
-    public ResponseEntity<Void> create(@RequestBody Abcence abcence, Authentication authentication) {
+    public ResponseEntity<AbcenceResponse> create(@RequestBody Abcence abcence, Authentication authentication) {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        abcence.setUser(buildUserRef(userDetails.getId()));
-        absenceService.create(abcence);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        Abcence created = absenceService.create(abcence, userDetails.getId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(AbcenceResponse.fromEntity(created));
     }
 
-    // GET ALL — un employé ne voit que SES absences ; admin/superviseur voit tout
-    @GetMapping
-    public ResponseEntity<List<Abcence>> getAll(Authentication authentication) {
+    @GetMapping("/me")
+    public ResponseEntity<List<AbcenceResponse>> getMyAbsences(Authentication authentication) {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        boolean isEmploye = userDetails.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_EMPLOYE"));
-
-        if (isEmploye) {
-            return ResponseEntity.ok(absenceService.findByUserId(userDetails.getId()));
-        }
-        return ResponseEntity.ok(absenceService.getAll());
+        return ResponseEntity.ok(
+                absenceService.findMyAbsences(userDetails.getId()).stream()
+                        .map(AbcenceResponse::fromEntity)
+                        .toList()
+        );
     }
 
-    // GET BY ID
+    @GetMapping("/team")
+    @PreAuthorize("hasAnyRole('SUPERVISEUR', 'ADMIN')")
+    public ResponseEntity<List<AbcenceResponse>> getTeamAbsences(Authentication authentication) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        return ResponseEntity.ok(
+                absenceService.findTeamAbsences(userDetails.getId()).stream()
+                        .map(AbcenceResponse::fromEntity)
+                        .toList()
+        );
+    }
+
+    @GetMapping("/team/pending")
+    @PreAuthorize("hasAnyRole('SUPERVISEUR', 'ADMIN')")
+    public ResponseEntity<List<AbcenceResponse>> getPendingTeamAbsences(Authentication authentication) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        return ResponseEntity.ok(
+                absenceService.findTeamPendingAbsences(userDetails.getId()).stream()
+                        .map(AbcenceResponse::fromEntity)
+                        .toList()
+        );
+    }
+
+    @GetMapping("/history/me")
+    public ResponseEntity<List<HistorySoldResponse>> getMyHistory(Authentication authentication) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        return ResponseEntity.ok(
+                absenceService.findHistoryForUser(userDetails.getId()).stream()
+                        .map(HistorySoldResponse::fromEntity)
+                        .toList()
+        );
+    }
+
     @GetMapping("/{id}")
-    public ResponseEntity<Abcence> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(absenceService.getById(id));
+    public ResponseEntity<AbcenceResponse> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(AbcenceResponse.fromEntity(absenceService.getById(id)));
     }
 
-    // UPDATE
     @PutMapping("/{id}")
-    public ResponseEntity<Abcence> update(
+    public ResponseEntity<AbcenceResponse> update(
             @PathVariable Long id,
             @RequestBody Abcence abcence,
             Authentication authentication) {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        absenceService.update(id, abcence, userDetails.getId());
-        return ResponseEntity.noContent().build();
+        Abcence updated = absenceService.update(id, abcence, userDetails.getId());
+        return ResponseEntity.ok(AbcenceResponse.fromEntity(updated));
     }
 
-    // DELETE
+    @PatchMapping("/{id}/decision/{decision}")
+    @PreAuthorize("hasAnyRole('SUPERVISEUR', 'ADMIN')")
+    public ResponseEntity<AbcenceResponse> decide(
+            @PathVariable Long id,
+            @PathVariable Status decision,
+            Authentication authentication) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        Abcence updated = absenceService.decide(id, userDetails.getId(), decision);
+        return ResponseEntity.ok(AbcenceResponse.fromEntity(updated));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id, Authentication authentication) {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         absenceService.delete(id, userDetails.getId());
         return ResponseEntity.noContent().build();
-    }
-
-    // Helper pour créer une référence User sans charger l'entité complète
-    private User buildUserRef(Long id) {
-        User u = new User();
-        u.setId(id);
-        return u;
     }
 }

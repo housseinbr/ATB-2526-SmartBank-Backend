@@ -1,18 +1,17 @@
 package tn.SmartBank.ATB_2526_SmartBank.service;
 
-import tn.SmartBank.ATB_2526_SmartBank.entity.User;
-import tn.SmartBank.ATB_2526_SmartBank.Enums.Role;
-import tn.SmartBank.ATB_2526_SmartBank.repository.UserRepository;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import tn.SmartBank.ATB_2526_SmartBank.Enums.Role;
+import tn.SmartBank.ATB_2526_SmartBank.entity.History_Sold;
 import tn.SmartBank.ATB_2526_SmartBank.entity.User;
+import tn.SmartBank.ATB_2526_SmartBank.repository.History_SoldRepository;
 import tn.SmartBank.ATB_2526_SmartBank.repository.UserRepository;
 
 import java.security.SecureRandom;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -23,6 +22,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService; // ← service mail à créer
+    private final History_SoldRepository historySoldRepository;
 
     private static final String CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
     private static final int PWD_LENGTH = 12;
@@ -40,8 +40,12 @@ public class UserService {
         // Générer mot de passe aléatoire
         String rawPassword = generateRandomPassword();
         user.setPwd(passwordEncoder.encode(rawPassword));
+        if (user.getRole() == Role.EMPLOYE || user.getRole() == Role.SUPERVISEUR) {
+            user.setSolde(22d);
+        }
 
         User saved = userRepository.save(user);
+        saved = initializeLeaveBalance(saved);
 
         // Envoyer le mot de passe par mail
         emailService.sendPasswordEmail(saved.getEmail(), saved.getFirstName(), rawPassword);
@@ -192,6 +196,31 @@ public class UserService {
         userRepository.save(user);
 
         emailService.sendForgotPasswordEmail(user.getEmail(), user.getFirstName(), newPassword);
+    }
+
+    @Transactional
+    public User initializeLeaveBalance(User user) {
+        if (user.getRole() != Role.EMPLOYE && user.getRole() != Role.SUPERVISEUR) {
+            return user;
+        }
+
+        if (user.getSolde() == null) {
+            user.setSolde(22d);
+            user = userRepository.save(user);
+        }
+
+        boolean hasHistory = !historySoldRepository.findByUser_IdOrderByDateActionDesc(user.getId()).isEmpty();
+        if (!hasHistory) {
+            historySoldRepository.save(History_Sold.builder()
+                    .user(user)
+                    .motif("SOLDE_INITIAL")
+                    .dateAction(LocalDate.now())
+                    .soldeBefore(0d)
+                    .soldeAfter(user.getSolde())
+                    .build());
+        }
+
+        return user;
     }
 
 

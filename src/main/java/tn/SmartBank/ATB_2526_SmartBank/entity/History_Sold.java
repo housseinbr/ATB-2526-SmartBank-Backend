@@ -33,8 +33,8 @@ public class History_Sold {
     private LocalDate dateAction;
 
     @Column(name = "solde_before")
-    private Float soldeBefore;
+    private Double soldeBefore;
 
     @Column(name = "solde_after")
-    private Float soldeAfter;
+    private Double soldeAfter;
 }

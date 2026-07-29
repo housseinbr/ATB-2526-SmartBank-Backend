@@ -60,10 +60,12 @@ public class User implements UserDetails {
     @Column(name = "role", nullable = false)
     private Role role;
 
-    private Double solde;
+    @Builder.Default
+    private Double solde = 22d;
 
     private Double salaire;
 
+    @Builder.Default
     @Column(nullable = false)
     private String actif = "actif";
 

@@ -1,7 +1,8 @@
 package tn.SmartBank.ATB_2526_SmartBank.repository;
 
-import tn.SmartBank.ATB_2526_SmartBank.entity.Abcence;
 import tn.SmartBank.ATB_2526_SmartBank.Enums.Status;
+import tn.SmartBank.ATB_2526_SmartBank.entity.Abcence;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,16 +14,16 @@ import java.util.List;
 @Repository
 public interface AbcenceRepository extends JpaRepository<Abcence, Long> {
 
-    // Toutes les absences d'un utilisateur
     List<Abcence> findByUser_Id(Long userId);
 
-    // Toutes les absences ayant un statut donné (ex: EN_ATTENTE pour la file de validation du superviseur)
     List<Abcence> findByStatus(Status status);
 
-    // Absences d'un utilisateur filtrées par statut
     List<Abcence> findByUser_IdAndStatus(Long userId, Status status);
 
-    // Vérifie si l'utilisateur a déjà une absence qui chevauche [dateStart, dateEnd]
+    List<Abcence> findByUser_Superviseur_Id(Long superviseurId);
+
+    List<Abcence> findByUser_Superviseur_IdAndStatus(Long superviseurId, Status status);
+
     @Query("""
         SELECT a FROM Abcence a
         WHERE a.user.id = :userId
@@ -37,7 +38,6 @@ public interface AbcenceRepository extends JpaRepository<Abcence, Long> {
             @Param("excludedStatus") Status excludedStatus
     );
 
-    // Idem, en excluant l'enregistrement courant (utile pour l'UPDATE)
     @Query("""
         SELECT a FROM Abcence a
         WHERE a.user.id = :userId

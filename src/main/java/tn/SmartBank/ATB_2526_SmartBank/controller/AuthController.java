@@ -89,7 +89,13 @@ public class AuthController {
                 .salaire(request.getSalaire())
                 .build();
 
+        if (user.getRole() == tn.SmartBank.ATB_2526_SmartBank.Enums.Role.EMPLOYE
+                || user.getRole() == tn.SmartBank.ATB_2526_SmartBank.Enums.Role.SUPERVISEUR) {
+            user.setSolde(22d);
+        }
+
         User saved = userRepository.save(user);
+        saved = userService.initializeLeaveBalance(saved);
 
         UserDetailsImpl userDetails = new UserDetailsImpl(saved);
         String token = jwtUtils.generateToken(userDetails);

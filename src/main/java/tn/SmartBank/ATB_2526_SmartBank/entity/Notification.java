@@ -32,5 +32,7 @@ public class Notification {
     private String text;
 
     // Enum in diagram - e.g. "LU" / "NON_LU"
+    // On garde l'ordinal pour éviter une migration DDL sur une base déjà existante.
+    @Enumerated(EnumType.ORDINAL)
     private Status_Notification status;
 }

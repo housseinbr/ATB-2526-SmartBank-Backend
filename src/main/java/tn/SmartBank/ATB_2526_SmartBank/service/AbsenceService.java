@@ -29,6 +29,7 @@ public class AbsenceService {
     private final AbcenceRepository abcenceRepository;
     private final History_SoldRepository historySoldRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     public Abcence create(Abcence abcence, Long currentUserId) {
         User currentUser = getUser(currentUserId);
@@ -39,7 +40,17 @@ public class AbsenceService {
 
         abcence.setUser(currentUser);
         abcence.setStatus(Status.EN_ATTENTE);
-        return abcenceRepository.save(abcence);
+        Abcence saved = abcenceRepository.save(abcence);
+
+        if (currentUser.getSuperviseur() != null) {
+            notificationService.create(
+                    currentUser.getSuperviseur(),
+                    "Nouvelle demande d'absence",
+                    buildRequestMessage(currentUser, saved)
+            );
+        }
+
+        return saved;
     }
 
     @Transactional(readOnly = true)
@@ -137,8 +148,18 @@ public class AbsenceService {
             userRepository.save(managedUser);
             recordBalanceChange(managedUser, absence, "ABSENCE_VALIDEE", balanceBefore, managedUser.getSolde());
             absence.setStatus(Status.VALIDE);
+            notificationService.create(
+                    managedUser,
+                    "Demande d'absence validée",
+                    buildDecisionMessage(absence, actor, "validée", managedUser.getSolde())
+            );
         } else {
             absence.setStatus(Status.REFUSE);
+            notificationService.create(
+                    target,
+                    "Demande d'absence refusée",
+                    buildDecisionMessage(absence, actor, "refusée", target.getSolde())
+            );
         }
 
         return abcenceRepository.save(absence);
@@ -228,6 +249,22 @@ public class AbsenceService {
                 .soldeAfter(roundBalance(after))
                 .build();
         historySoldRepository.save(history);
+    }
+
+    private String buildDecisionMessage(Abcence absence, User actor, String decisionLabel, Double balanceAfter) {
+        String start = String.valueOf(absence.getDateStart());
+        String end = String.valueOf(absence.getDateEnd());
+        String actorName = actor.getFirstName() + " " + actor.getLastName();
+        String balanceText = balanceAfter != null ? String.format(" Solde actuel : %.2f jours.", roundBalance(balanceAfter)) : "";
+
+        return "Votre demande du " + start + " au " + end + " a été " + decisionLabel +
+                " par " + actorName + "." + balanceText;
+    }
+
+    private String buildRequestMessage(User requester, Abcence absence) {
+        String requesterName = requester.getFirstName() + " " + requester.getLastName();
+        return requesterName + " a soumis une demande du " + absence.getDateStart() + " au " +
+                absence.getDateEnd() + " (" + absence.getType() + ").";
     }
 
     private double roundBalance(double value) {

@@ -13,6 +13,7 @@ import tn.SmartBank.ATB_2526_SmartBank.repository.UserRepository;
 import java.security.SecureRandom;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +24,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService; // ← service mail à créer
     private final History_SoldRepository historySoldRepository;
+    private final NotificationService notificationService;
 
     private static final String CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
     private static final int PWD_LENGTH = 12;
@@ -65,6 +67,7 @@ public class UserService {
 
     public User updateUser(Long id, User user) {
         User existing = getUserById(id);
+        String changes = describeUserChanges(existing, user);
 
         if (user.getFirstName() != null) existing.setFirstName(user.getFirstName());
         if (user.getLastName() != null) existing.setLastName(user.getLastName());
@@ -90,7 +93,15 @@ public class UserService {
             existing.setCin(user.getCin());
         }
 
-        return userRepository.save(existing);
+        User saved = userRepository.save(existing);
+        if (!changes.isBlank()) {
+            notificationService.create(
+                    saved,
+                    "Mise à jour du profil",
+                    "Votre profil a été mis à jour : " + changes
+            );
+        }
+        return saved;
     }
 
 
@@ -171,7 +182,15 @@ public class UserService {
         }
 
         user.setSuperviseur(superviseur);
-        return userRepository.save(user);
+        User saved = userRepository.save(user);
+
+        String supervisorName = superviseur.getFirstName() + " " + superviseur.getLastName();
+        notificationService.create(
+                saved,
+                "Affectation d'équipe",
+                "Vous êtes maintenant rattaché à l'équipe de " + supervisorName + "."
+        );
+        return saved;
     }
 
 
@@ -181,6 +200,11 @@ public class UserService {
         User saved = userRepository.save(user);
 
         emailService.sendPasswordChangedEmail(saved.getEmail(), saved.getFirstName());
+        notificationService.create(
+                saved,
+                "Mot de passe modifié",
+                "Votre mot de passe a été modifié avec succès."
+        );
 
         return saved;
     }
@@ -221,6 +245,35 @@ public class UserService {
         }
 
         return user;
+    }
+
+    private String describeUserChanges(User existing, User incoming) {
+        StringBuilder changes = new StringBuilder();
+
+        appendChange(changes, "prénom", existing.getFirstName(), incoming.getFirstName());
+        appendChange(changes, "nom", existing.getLastName(), incoming.getLastName());
+        appendChange(changes, "nom d'utilisateur", existing.getUseName(), incoming.getUseName());
+        appendChange(changes, "téléphone", existing.getNumTel(), incoming.getNumTel());
+        appendChange(changes, "fax", existing.getNumFax(), incoming.getNumFax());
+        appendChange(changes, "date de naissance", String.valueOf(existing.getBirthday()), String.valueOf(incoming.getBirthday()));
+        appendChange(changes, "sexe", existing.getSexe(), incoming.getSexe());
+        appendChange(changes, "email", existing.getEmail(), incoming.getEmail());
+        appendChange(changes, "CIN", existing.getCin(), incoming.getCin());
+        appendChange(changes, "solde", String.valueOf(existing.getSolde()), String.valueOf(incoming.getSolde()));
+        appendChange(changes, "salaire", String.valueOf(existing.getSalaire()), String.valueOf(incoming.getSalaire()));
+
+        return changes.toString();
+    }
+
+    private void appendChange(StringBuilder builder, String label, String before, String after) {
+        if (Objects.equals(before, after)) {
+            return;
+        }
+
+        if (builder.length() > 0) {
+            builder.append("; ");
+        }
+        builder.append(label).append(" mis à jour");
     }
 
 

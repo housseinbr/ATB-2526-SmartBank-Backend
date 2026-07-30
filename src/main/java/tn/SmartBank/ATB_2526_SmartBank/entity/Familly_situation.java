@@ -29,4 +29,7 @@ public class Familly_situation {
     @Column(name = "document_upload")
     @Enumerated(EnumType.STRING)
     private SituationFamiliale documentUpload;
+
+    @Column(name = "document_link")
+    private String documentLink;
 }

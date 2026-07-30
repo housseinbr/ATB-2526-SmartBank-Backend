@@ -36,4 +36,7 @@ public class Bank_Account {
     private Float controlleChiffre;
 
     private String contry;
+
+    @Column(name = "document_link")
+    private String documentLink;
 }

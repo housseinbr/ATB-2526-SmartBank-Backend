@@ -40,4 +40,7 @@ public class Donner_Administratif {
 
     @Column(name = "date_inscrit")
     private LocalDate dateInscrit;
+
+    @Column(name = "document_link")
+    private String documentLink;
 }

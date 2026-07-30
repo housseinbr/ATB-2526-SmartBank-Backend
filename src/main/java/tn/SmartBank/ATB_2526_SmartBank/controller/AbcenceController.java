@@ -31,6 +31,16 @@ public class AbcenceController {
 
     private final AbsenceService absenceService;
 
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<AbcenceResponse>> getAllAbsences() {
+        return ResponseEntity.ok(
+                absenceService.getAll().stream()
+                        .map(AbcenceResponse::fromEntity)
+                        .toList()
+        );
+    }
+
     @PostMapping
     public ResponseEntity<AbcenceResponse> create(@RequestBody Abcence abcence, Authentication authentication) {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();

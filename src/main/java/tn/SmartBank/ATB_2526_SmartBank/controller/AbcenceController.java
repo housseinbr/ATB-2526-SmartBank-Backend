@@ -90,6 +90,16 @@ public class AbcenceController {
         );
     }
 
+    @GetMapping("/history/user/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<HistorySoldResponse>> getHistoryForUser(@PathVariable Long userId) {
+        return ResponseEntity.ok(
+                absenceService.findHistoryForUser(userId).stream()
+                        .map(HistorySoldResponse::fromEntity)
+                        .toList()
+        );
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<AbcenceResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(AbcenceResponse.fromEntity(absenceService.getById(id)));

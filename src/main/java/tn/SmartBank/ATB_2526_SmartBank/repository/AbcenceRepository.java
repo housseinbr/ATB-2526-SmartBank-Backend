@@ -53,4 +53,34 @@ public interface AbcenceRepository extends JpaRepository<Abcence, Long> {
             @Param("excludeId") Long excludeId,
             @Param("excludedStatus") Status excludedStatus
     );
+
+    @Query("""
+        SELECT a FROM Abcence a
+        WHERE a.user.id = :userId
+        AND a.status = :status
+        AND a.dateStart <= :dateEnd
+        AND a.dateEnd >= :dateStart
+        """)
+    List<Abcence> findApprovedOverlapping(
+            @Param("userId") Long userId,
+            @Param("dateStart") LocalDate dateStart,
+            @Param("dateEnd") LocalDate dateEnd,
+            @Param("status") Status status
+    );
+
+    @Query("""
+        SELECT a FROM Abcence a
+        WHERE a.user.id = :userId
+        AND a.idAbcance <> :excludeId
+        AND a.status = :status
+        AND a.dateStart <= :dateEnd
+        AND a.dateEnd >= :dateStart
+        """)
+    List<Abcence> findApprovedOverlappingExcludingSelf(
+            @Param("userId") Long userId,
+            @Param("dateStart") LocalDate dateStart,
+            @Param("dateEnd") LocalDate dateEnd,
+            @Param("excludeId") Long excludeId,
+            @Param("status") Status status
+    );
 }

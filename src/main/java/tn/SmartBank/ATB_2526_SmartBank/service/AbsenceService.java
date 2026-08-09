@@ -36,6 +36,7 @@ public class AbsenceService {
         ensureLeaveBalanceInitialized(currentUser);
 
         validateDates(abcence);
+        ensureSufficientBalance(currentUser, abcence);
         ensureNoOverlap(currentUser.getId(), abcence.getDateStart(), abcence.getDateEnd(), null);
 
         abcence.setUser(currentUser);
@@ -99,6 +100,7 @@ public class AbsenceService {
         }
 
         validateDates(abcence);
+        ensureSufficientBalance(existing.getUser(), abcence);
         ensureNoOverlap(existing.getUser().getId(), abcence.getDateStart(), abcence.getDateEnd(), existing.getIdAbcance());
 
         existing.setType(abcence.getType());
@@ -201,8 +203,8 @@ public class AbsenceService {
 
     private void ensureNoOverlap(Long userId, LocalDate dateStart, LocalDate dateEnd, Long excludeId) {
         List<Abcence> overlaps = excludeId == null
-                ? abcenceRepository.findOverlapping(userId, dateStart, dateEnd, Status.REFUSE)
-                : abcenceRepository.findOverlappingExcludingSelf(userId, dateStart, dateEnd, excludeId, Status.REFUSE);
+                ? abcenceRepository.findApprovedOverlapping(userId, dateStart, dateEnd, Status.VALIDE)
+                : abcenceRepository.findApprovedOverlappingExcludingSelf(userId, dateStart, dateEnd, excludeId, Status.VALIDE);
 
         if (!overlaps.isEmpty()) {
             throw new IllegalStateException("Une demande d'absence existe déjà sur cette période");
@@ -215,6 +217,16 @@ public class AbsenceService {
         }
         if (abcence.getDateEnd().isBefore(abcence.getDateStart())) {
             throw new IllegalArgumentException("La date de fin ne peut pas être avant la date de début");
+        }
+    }
+
+    private void ensureSufficientBalance(User user, Abcence absence) {
+        User managedUser = ensureLeaveBalanceInitialized(user);
+        double requiredDays = calculateDays(absence);
+        double availableBalance = roundBalance(managedUser.getSolde());
+
+        if (availableBalance < requiredDays) {
+            throw new IllegalStateException("Le solde est insuffisant pour cette demande d'absence");
         }
     }
 

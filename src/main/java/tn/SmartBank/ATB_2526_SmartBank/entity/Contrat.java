@@ -41,6 +41,9 @@ public class Contrat {
     @Column(name = "type_temp")
     private Type_Temp typeTemp;
 
+    @Column(name = "document_link")
+    private String documentLink;
+
     @Column(name = "date_affectation")
     private LocalDate dateAffectation;
 

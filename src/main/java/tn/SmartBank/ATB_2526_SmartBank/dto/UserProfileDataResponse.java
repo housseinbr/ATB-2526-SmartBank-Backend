@@ -19,6 +19,7 @@ public class UserProfileDataResponse {
     private BankAccountDto bankAccount;
     private List<AdministrativeDataDto> administrativeData;
     private FamilySituationDto familySituation;
+    private ContratDto contract;
     private List<PersonChargeDto> dependents;
     private List<PersonUrgentDto> urgentContacts;
 }

@@ -4,11 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import tn.SmartBank.ATB_2526_SmartBank.Enums.CathegorieSituation;
-import tn.SmartBank.ATB_2526_SmartBank.Enums.Classification;
-import tn.SmartBank.ATB_2526_SmartBank.Enums.Qualification;
-import tn.SmartBank.ATB_2526_SmartBank.Enums.SituationEmploye;
-import tn.SmartBank.ATB_2526_SmartBank.Enums.SituationFamiliale;
+import tn.SmartBank.ATB_2526_SmartBank.Enums.*;
 import tn.SmartBank.ATB_2526_SmartBank.dto.*;
 import tn.SmartBank.ATB_2526_SmartBank.entity.*;
 import tn.SmartBank.ATB_2526_SmartBank.repository.*;
@@ -31,6 +27,7 @@ public class UserProfileDataService {
     private final UserService userService;
     private final AddressRepository addressRepository;
     private final Bank_AccountRepository bankAccountRepository;
+    private final ContratRepository contratRepository;
     private final Donner_AdministratifRepository donnerAdministratifRepository;
     private final Familly_situationRepository famillySituationRepository;
     private final Person_ChargeRepository personChargeRepository;
@@ -47,6 +44,7 @@ public class UserProfileDataService {
                         .map(AddressDto::fromEntity)
                         .toList())
                 .bankAccount(bankAccountRepository.findByUser_Id(userId).map(BankAccountDto::fromEntity).orElse(null))
+                .contract(contratRepository.findByUser_Id(userId).map(ContratDto::fromEntity).orElse(null))
                 .administrativeData(donnerAdministratifRepository.findByUser_Id(userId).stream()
                         .sorted(Comparator.comparing(Donner_Administratif::getIdAd, Comparator.nullsLast(Comparator.naturalOrder())).reversed())
                         .map(AdministrativeDataDto::fromEntity)
@@ -108,6 +106,32 @@ public class UserProfileDataService {
 
     public void deleteBankAccount(Long userId) {
         bankAccountRepository.findByUser_Id(userId).ifPresent(bankAccountRepository::delete);
+    }
+
+    public ContratDto saveContract(Long userId, ContratDto dto) {
+        return saveContract(userId, dto, null);
+    }
+
+    public ContratDto saveContract(Long userId, ContratDto dto, MultipartFile documentImage) {
+        User user = userService.getUserById(userId);
+        Contrat contract = contratRepository.findByUser_Id(userId).orElseGet(Contrat::new);
+        contract.setUser(user);
+        contract.setNature(parseEnum(dto.getNature(), Nature_Contrat.class));
+        contract.setTypeContra(parseEnum(dto.getTypeContra(), Type_Contrat.class));
+        contract.setDateStart(dto.getDateStart());
+        contract.setDateEnd(dto.getDateEnd());
+        contract.setTypeTemp(parseEnum(dto.getTypeTemp(), Type_Temp.class));
+        contract.setDateAffectation(dto.getDateAffectation());
+        contract.setPost(parseEnum(dto.getPost(), Post.class));
+        contract.setEmploi(parseEnum(dto.getEmploi(), Emploi.class));
+        contract.setTaux(dto.getTaux());
+        contract.setLieu(dto.getLieu());
+        contract.setDocumentLink(resolveDocumentLink(userId, "contract", documentImage, dto.getDocumentLink(), contract.getDocumentLink()));
+        return ContratDto.fromEntity(contratRepository.save(contract));
+    }
+
+    public void deleteContract(Long userId) {
+        contratRepository.findByUser_Id(userId).ifPresent(contratRepository::delete);
     }
 
     public FamilySituationDto saveFamilySituation(Long userId, FamilySituationDto dto) {

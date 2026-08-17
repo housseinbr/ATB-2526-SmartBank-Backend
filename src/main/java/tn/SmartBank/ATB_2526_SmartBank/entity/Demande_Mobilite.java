@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import tn.SmartBank.ATB_2526_SmartBank.Enums.Status;
 
+import java.time.LocalDate;
+
 @Entity
 @Table(name = "demande_mobilite")
 @Getter
@@ -29,5 +31,8 @@ public class Demande_Mobilite {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private Status status;
+
+    @Column(name = "date_demande")
+    private LocalDate date;
 
 }

@@ -182,6 +182,7 @@ public class AbsenceService {
         }
     }
 
+    //partie mettre ajour de sold pour chaque user every 1er dans chaque nouveau mois
     @Scheduled(cron = "0 0 0 1 * *")
     public void scheduledMonthlyAccruals() {
         addMonthlyAccruals();

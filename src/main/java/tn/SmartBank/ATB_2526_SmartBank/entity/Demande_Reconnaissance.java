@@ -3,40 +3,44 @@ package tn.SmartBank.ATB_2526_SmartBank.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import tn.SmartBank.ATB_2526_SmartBank.Enums.Status;
+import tn.SmartBank.ATB_2526_SmartBank.Enums.Type_Demande;
 
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "evaluation")
+@Table(name = "demande_reconnaissance")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Evaluation {
+public class Demande_Reconnaissance {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_evaluation")
-    private Long idEvaluation;
+    @Column(name = "id_demande_reconnaissance")
+    private Long idDemandeReconnaissance;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_user", nullable = false)
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_superviseur", nullable = false)
+    @JoinColumn(name = "id_superviseur")
     private User superviseur;
 
-    private String title;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Type_Demande type;
 
-    @Column(name = "desc_", columnDefinition = "TEXT")
-    private String desc;
+    @Column(columnDefinition = "TEXT")
+    private String motif;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Status status;
 
     private LocalDate date;
 
-    private String lieu;
-
-    @Enumerated(EnumType.STRING)
-    private Status status;
+    private String pdfLink;
 }

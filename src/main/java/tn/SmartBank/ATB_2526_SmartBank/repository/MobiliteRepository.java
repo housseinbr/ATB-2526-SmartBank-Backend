@@ -4,6 +4,9 @@ import tn.SmartBank.ATB_2526_SmartBank.entity.Mobilite;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface MobiliteRepository extends JpaRepository<Mobilite, Long> {
+    List<Mobilite> findAllByOrderByDateDesc();
 }

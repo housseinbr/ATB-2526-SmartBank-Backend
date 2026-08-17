@@ -81,6 +81,53 @@ public class UserProfileDataController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/contract")
+    public ResponseEntity<ContratDto> createContract(@PathVariable Long userId, @RequestBody ContratDto dto) {
+        return ResponseEntity.ok(userProfileDataService.saveContract(userId, dto));
+    }
+
+    @PostMapping(value = "/contract/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ContratDto> createContractWithImage(
+            @PathVariable Long userId,
+            @RequestParam(required = false) String nature,
+            @RequestParam(required = false) String typeContra,
+            @RequestParam(required = false) String dateStart,
+            @RequestParam(required = false) String dateEnd,
+            @RequestParam(required = false) String typeTemp,
+            @RequestParam(required = false) String dateAffectation,
+            @RequestParam(required = false) String post,
+            @RequestParam(required = false) String emploi,
+            @RequestParam(required = false) Double taux,
+            @RequestParam(required = false) String lieu,
+            @RequestParam(required = false) String documentLink,
+            @RequestPart(required = false) MultipartFile documentImage) {
+        ContratDto dto = ContratDto.builder()
+                .nature(nature)
+                .typeContra(typeContra)
+                .dateStart(dateStart == null || dateStart.isBlank() ? null : java.time.LocalDate.parse(dateStart))
+                .dateEnd(dateEnd == null || dateEnd.isBlank() ? null : java.time.LocalDate.parse(dateEnd))
+                .typeTemp(typeTemp)
+                .dateAffectation(dateAffectation == null || dateAffectation.isBlank() ? null : java.time.LocalDate.parse(dateAffectation))
+                .post(post)
+                .emploi(emploi)
+                .taux(taux)
+                .lieu(lieu)
+                .documentLink(documentLink)
+                .build();
+        return ResponseEntity.ok(userProfileDataService.saveContract(userId, dto, documentImage));
+    }
+
+    @PutMapping("/contract")
+    public ResponseEntity<ContratDto> updateContract(@PathVariable Long userId, @RequestBody ContratDto dto) {
+        return ResponseEntity.ok(userProfileDataService.saveContract(userId, dto));
+    }
+
+    @DeleteMapping("/contract")
+    public ResponseEntity<Void> deleteContract(@PathVariable Long userId) {
+        userProfileDataService.deleteContract(userId);
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/family-situation")
     public ResponseEntity<FamilySituationDto> createFamilySituation(@PathVariable Long userId, @RequestBody FamilySituationDto dto) {
         return ResponseEntity.ok(userProfileDataService.saveFamilySituation(userId, dto));

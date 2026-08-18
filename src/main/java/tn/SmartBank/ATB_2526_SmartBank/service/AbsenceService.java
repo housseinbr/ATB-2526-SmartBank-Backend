@@ -17,6 +17,7 @@ import tn.SmartBank.ATB_2526_SmartBank.repository.UserRepository;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -36,7 +37,8 @@ public class AbsenceService {
         ensureLeaveBalanceInitialized(currentUser);
 
         validateDates(abcence);
-        ensureSufficientBalance(currentUser, abcence);
+        // Une demande peut être déposée même si le solde n'est pas encore suffisant.
+        // Le solde est contrôlé uniquement lors de la décision finale du superviseur/admin.
         ensureNoOverlap(currentUser.getId(), abcence.getDateStart(), abcence.getDateEnd(), null);
 
         abcence.setUser(currentUser);
@@ -90,6 +92,33 @@ public class AbsenceService {
         return historySoldRepository.findByUser_IdOrderByDateActionDesc(userId);
     }
 
+    @Transactional(readOnly = true)
+    public Map<String, Object> buildAiContext(Long absenceId, Long actorId) {
+        User actor = getUser(actorId);
+        Abcence absence = getById(absenceId);
+        User employee = absence.getUser();
+        ensureCanManage(actor, employee);
+        if (absence.getStatus() != Status.EN_ATTENTE) {
+            throw new IllegalStateException("Seules les demandes en attente peuvent être analysées");
+        }
+        long overlaps = findTeamAbsences(actorId).stream()
+                .filter(item -> !item.getIdAbcance().equals(absenceId))
+                .filter(item -> item.getStatus() == Status.EN_ATTENTE || item.getStatus() == Status.VALIDE)
+                .filter(item -> !item.getDateEnd().isBefore(absence.getDateStart()) && !item.getDateStart().isAfter(absence.getDateEnd()))
+                .count();
+        return Map.of(
+                "employee_name", employee.getFirstName() + " " + employee.getLastName(),
+                "leave_type", String.valueOf(absence.getType()),
+                "start_date", absence.getDateStart().toString(),
+                "end_date", absence.getDateEnd().toString(),
+                "requested_days", calculateDays(absence),
+                "leave_balance", employee.getSolde() == null ? INITIAL_BALANCE : employee.getSolde(),
+                "employee_active", "actif".equalsIgnoreCase(employee.getActif()),
+                "overlapping_team_absences", overlaps,
+                "approved_absences_count", historySoldRepository.findByUser_IdOrderByDateActionDesc(employee.getId()).size()
+        );
+    }
+
     public Abcence update(Long id, Abcence abcence, Long currentUserId) {
         Abcence existing = getById(id);
         if (!existing.getUser().getId().equals(currentUserId)) {
@@ -100,7 +129,6 @@ public class AbsenceService {
         }
 
         validateDates(abcence);
-        ensureSufficientBalance(existing.getUser(), abcence);
         ensureNoOverlap(existing.getUser().getId(), abcence.getDateStart(), abcence.getDateEnd(), existing.getIdAbcance());
 
         existing.setType(abcence.getType());

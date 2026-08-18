@@ -18,6 +18,12 @@ public class GlobalExceptionHandler {
                 .body(new ApiErrorResponse(exception.getMessage(), HttpStatus.CONFLICT.value()));
     }
 
+    @ExceptionHandler(AiServiceUnavailableException.class)
+    public ResponseEntity<ApiErrorResponse> handleAiUnavailable(AiServiceUnavailableException exception) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(new ApiErrorResponse(exception.getMessage(), HttpStatus.SERVICE_UNAVAILABLE.value()));
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiErrorResponse> handleIllegalArgumentException(IllegalArgumentException exception) {
         return ResponseEntity.badRequest()

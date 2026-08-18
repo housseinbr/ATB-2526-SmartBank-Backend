@@ -46,13 +46,14 @@ public class EvaluationController {
         return ResponseEntity.ok(evaluationService.getManagedPendingEvaluations(user.getId()).stream().map(EvaluationResponse::fromEntity).toList());
     }
 
-    @PostMapping("/user/{userId}/supervisor/{supervisorId}")
+    @PostMapping("/user/{userId}")
     @PreAuthorize("hasAnyRole('SUPERVISEUR', 'ADMIN')")
     public ResponseEntity<EvaluationResponse> create(
             @PathVariable Long userId,
-            @PathVariable Long supervisorId,
+            Authentication authentication,
             @RequestBody Evaluation evaluation) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(EvaluationResponse.fromEntity(evaluationService.create(userId, supervisorId, evaluation)));
+        UserDetailsImpl actor = (UserDetailsImpl) authentication.getPrincipal();
+        return ResponseEntity.status(HttpStatus.CREATED).body(EvaluationResponse.fromEntity(evaluationService.create(userId, actor.getId(), evaluation)));
     }
 
     @PatchMapping("/{id}/decision/{decision}")

@@ -19,7 +19,7 @@ import java.nio.file.Path;
 @RequestMapping("/api/documents")
 public class DocumentController {
 
-    private static final Path DOCUMENTS_DIR = Path.of("C:\\Users\\Houssein\\OneDrive\\Documents\\stage doc\\ATB-2526-SmartBank\\ATB-2526-SmartBank-Backend\\src\\main\\java\\tn\\SmartBank\\ATB_2526_SmartBank\\Documents");
+    private static final Path DOCUMENTS_DIR = Path.of(System.getProperty("user.home"), "ATB-2526-SmartBank-Documents");
 
     @GetMapping("/{fileName}")
     public ResponseEntity<Resource> preview(@PathVariable String fileName) throws MalformedURLException {

@@ -10,9 +10,11 @@ import tn.SmartBank.ATB_2526_SmartBank.Enums.Status;
 import tn.SmartBank.ATB_2526_SmartBank.Enums.Type_Demande;
 import tn.SmartBank.ATB_2526_SmartBank.entity.Demande_Reconnaissance;
 import tn.SmartBank.ATB_2526_SmartBank.entity.Document_Reconnaissance;
+import tn.SmartBank.ATB_2526_SmartBank.entity.Contrat;
 import tn.SmartBank.ATB_2526_SmartBank.entity.User;
 import tn.SmartBank.ATB_2526_SmartBank.repository.Demande_ReconnaissanceRepository;
 import tn.SmartBank.ATB_2526_SmartBank.repository.Document_ReconnaissanceRepository;
+import tn.SmartBank.ATB_2526_SmartBank.repository.ContratRepository;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -29,10 +31,11 @@ import java.util.UUID;
 @Transactional
 public class DemandeReconnaissanceService {
 
-    private static final Path DOCUMENTS_DIR = Path.of("C:\\Users\\Houssein\\OneDrive\\Documents\\stage doc\\ATB-2526-SmartBank\\ATB-2526-SmartBank-Backend\\src\\main\\java\\tn\\SmartBank\\ATB_2526_SmartBank\\Documents");
+    private static final Path DOCUMENTS_DIR = Path.of(System.getProperty("user.home"), "ATB-2526-SmartBank-Documents");
 
     private final Demande_ReconnaissanceRepository demandeRepository;
     private final Document_ReconnaissanceRepository documentRepository;
+    private final ContratRepository contratRepository;
     private final UserService userService;
     private final NotificationService notificationService;
 
@@ -50,7 +53,15 @@ public class DemandeReconnaissanceService {
                     .toList();
         }
         if (actor.getRole() == Role.SUPERVISEUR) {
-            return demandeRepository.findByUser_Superviseur_IdOrderByDateDesc(actorId);
+            // Le superviseur doit voir les demandes de son équipe, mais aussi ses propres
+            // demandes lorsqu'un administrateur les traite.
+            List<Demande_Reconnaissance> requests = new ArrayList<>(
+                    demandeRepository.findByUser_Superviseur_IdOrderByDateDesc(actorId)
+            );
+            requests.addAll(demandeRepository.findByUser_IdOrderByDateDesc(actorId));
+            return requests.stream()
+                    .sorted((a, b) -> b.getDate().compareTo(a.getDate()))
+                    .toList();
         }
         return demandeRepository.findByUser_IdOrderByDateDesc(actorId);
     }
@@ -156,15 +167,50 @@ public class DemandeReconnaissanceService {
     }
 
     private byte[] buildPdfBytes(Demande_Reconnaissance demande) {
-        String title = "SmartBank - " + (demande.getType() == Type_Demande.ATTESTATION ? "Attestation" : "Badge");
-        String body = demande.getUser().getFirstName() + " " + demande.getUser().getLastName() + " - " + demande.getMotif();
+        String employee = demande.getUser().getFirstName() + " " + demande.getUser().getLastName();
+        User supervisor = demande.getUser().getSuperviseur();
+        Contrat contract = contratRepository.findByUser_Id(demande.getUser().getId()).orElse(null);
+        boolean attestation = demande.getType() == Type_Demande.ATTESTATION;
+        String title = attestation ? "ATTESTATION DE TRAVAIL" : "BADGE PROFESSIONNEL";
+        String reference = "Reference : " + demande.getIdDemandeReconnaissance() + " / " + LocalDate.now();
+        String introductoryText = attestation
+                ? "La Banque ATB atteste que " + employee + " est collaborateur(trice) de notre etablissement."
+                : "Ce badge identifie " + employee + " comme collaborateur(trice) de la Banque ATB.";
+        String purpose = demande.getMotif() == null || demande.getMotif().isBlank()
+                ? "Document genere a la demande du collaborateur."
+                : "Objet : " + demande.getMotif();
+        String employeeDetails = "Matricule/CIN : " + nullSafe(demande.getUser().getCin())
+                + "   |   Email : " + nullSafe(demande.getUser().getEmail());
+        String jobDetails = contract == null ? "Fonction : Non renseignee"
+                : "Fonction : " + nullSafe(contract.getPost() == null ? null : contract.getPost().name())
+                + "   |   Entite : " + nullSafe(contract.getLieu());
+        String supervisorDetails = supervisor == null ? "Superviseur : Non renseigne"
+                : "Superviseur : " + nullSafe(supervisor.getFirstName()) + " " + nullSafe(supervisor.getLastName())
+                + "   |   " + nullSafe(supervisor.getEmail());
         List<String> objects = new ArrayList<>();
-        String content = "BT /F1 18 Tf 50 760 Td (" + escape(title) + ") Tj T* /F1 12 Tf (" + escape(body) + ") Tj ET";
+        String content = String.join("\n",
+                "q 0.63 0.08 0.13 rg 0 792 595 50 re f Q",
+                "BT /F2 18 Tf 50 810 Td (ATB | Arab Tunisian Bank) Tj ET",
+                "q 0.63 0.08 0.13 rg 50 730 495 2 re f Q",
+                "BT /F2 22 Tf 50 690 Td (" + escape(title) + ") Tj ET",
+                "BT /F1 10 Tf 50 662 Td (" + escape(reference) + ") Tj ET",
+                "BT /F1 12 Tf 50 590 Td (" + escape(introductoryText) + ") Tj ET",
+                "BT /F1 12 Tf 50 560 Td (" + escape(purpose) + ") Tj ET",
+                "BT /F2 11 Tf 50 510 Td (Informations du collaborateur) Tj ET",
+                "BT /F1 10 Tf 50 490 Td (" + escape(employeeDetails) + ") Tj ET",
+                "BT /F1 10 Tf 50 472 Td (" + escape(jobDetails) + ") Tj ET",
+                "BT /F1 10 Tf 50 454 Td (" + escape(supervisorDetails) + ") Tj ET",
+                "BT /F1 11 Tf 50 410 Td (Ce document est delivre pour servir et valoir ce que de droit.) Tj ET",
+                "q 0.90 0.90 0.90 rg 50 220 495 1 re f Q",
+                "BT /F1 10 Tf 50 195 Td (Fait a Tunis, le " + LocalDate.now() + ") Tj ET",
+                "BT /F2 11 Tf 365 145 Td (Direction des Ressources Humaines) Tj ET",
+                "BT /F1 9 Tf 50 70 Td (Document genere par SmartBank - ATB. Verification interne requise.) Tj ET");
         objects.add("1 0 obj<< /Type /Catalog /Pages 2 0 R >>endobj\n");
         objects.add("2 0 obj<< /Type /Pages /Kids [3 0 R] /Count 1 >>endobj\n");
-        objects.add("3 0 obj<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>endobj\n");
+        objects.add("3 0 obj<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> /Contents 4 0 R >>endobj\n");
         objects.add("4 0 obj<< /Length " + content.getBytes(StandardCharsets.US_ASCII).length + " >>stream\n" + content + "\nendstream\nendobj\n");
         objects.add("5 0 obj<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>endobj\n");
+        objects.add("6 0 obj<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>endobj\n");
         StringBuilder pdf = new StringBuilder("%PDF-1.4\n");
         List<Integer> offsets = new ArrayList<>();
         offsets.add(0);
@@ -184,6 +230,11 @@ public class DemandeReconnaissanceService {
     }
 
     private String escape(String value) {
-        return value.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)");
+        return value.replaceAll("[^\\x20-\\x7E]", " ")
+                .replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)");
+    }
+
+    private String nullSafe(String value) {
+        return value == null || value.isBlank() ? "Non renseigne" : value;
     }
 }

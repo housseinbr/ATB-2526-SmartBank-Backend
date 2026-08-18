@@ -22,7 +22,8 @@ import java.util.UUID;
 @Transactional
 public class UserProfileDataService {
 
-    private static final Path DOCUMENTS_DIR = Path.of("C:\\Users\\Houssein\\OneDrive\\Documents\\stage doc\\ATB-2526-SmartBank\\ATB-2526-SmartBank-Backend\\src\\main\\java\\tn\\SmartBank\\ATB_2526_SmartBank\\Documents");
+    // Use an OS-independent per-user documents directory by default. Can be customized later via config.
+    private static final Path DOCUMENTS_DIR = Path.of(System.getProperty("user.home"), "ATB-2526-SmartBank-Documents");
 
     private final UserService userService;
     private final AddressRepository addressRepository;

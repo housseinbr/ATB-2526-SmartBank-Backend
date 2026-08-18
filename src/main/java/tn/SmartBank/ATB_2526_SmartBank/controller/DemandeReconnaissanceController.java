@@ -48,14 +48,16 @@ public class DemandeReconnaissanceController {
         return ResponseEntity.ok(service.getManagedPendingRequests(user.getId()).stream().map(DemandeReconnaissanceResponse::fromEntity).toList());
     }
 
-    @PostMapping("/user/{userId}")
+    @PostMapping("/me")
     public ResponseEntity<DemandeReconnaissanceResponse> create(
-            @PathVariable Long userId,
-            @RequestParam Type_Demande type,
-            @RequestParam(required = false) String motif) {
-        Demande_Reconnaissance created = service.create(userId, type, motif);
+            Authentication authentication,
+            @RequestBody ReconnaissanceRequest request) {
+        UserDetailsImpl user = (UserDetailsImpl) authentication.getPrincipal();
+        Demande_Reconnaissance created = service.create(user.getId(), request.type(), request.motif());
         return ResponseEntity.status(HttpStatus.CREATED).body(DemandeReconnaissanceResponse.fromEntity(created));
     }
+
+    public record ReconnaissanceRequest(Type_Demande type, String motif) { }
 
     @PatchMapping("/{id}/decision/{decision}")
     @PreAuthorize("hasAnyRole('SUPERVISEUR', 'ADMIN')")

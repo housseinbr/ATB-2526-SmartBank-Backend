@@ -62,6 +62,10 @@ public class EvaluationService {
         if (supervisor.getRole() == Role.EMPLOYE) {
             throw new IllegalArgumentException("Un employé ne peut pas créer une évaluation");
         }
+        if (supervisor.getRole() == Role.SUPERVISEUR && (target.getSuperviseur() == null
+                || !target.getSuperviseur().getId().equals(supervisorId))) {
+            throw new AccessDeniedException("Vous ne pouvez évaluer que les employés de votre équipe");
+        }
         evaluation.setUser(target);
         evaluation.setSuperviseur(supervisor);
         evaluation.setStatus(Status.EN_ATTENTE);

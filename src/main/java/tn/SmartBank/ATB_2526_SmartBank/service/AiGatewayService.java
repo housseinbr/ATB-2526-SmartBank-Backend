@@ -8,6 +8,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import tn.SmartBank.ATB_2526_SmartBank.dto.AiChatRequest;
 import tn.SmartBank.ATB_2526_SmartBank.dto.AiChatResponse;
+import tn.SmartBank.ATB_2526_SmartBank.dto.AiActionConfirmRequest;
 import tn.SmartBank.ATB_2526_SmartBank.dto.AiLeaveRecommendation;
 import tn.SmartBank.ATB_2526_SmartBank.exception.AiServiceUnavailableException;
 
@@ -26,6 +27,23 @@ public class AiGatewayService {
         try {
             AiChatResponse response = client().post()
                     .uri("/api/ai/chat")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(request)
+                    .retrieve()
+                    .body(AiChatResponse.class);
+            if (response == null || response.response() == null) {
+                throw new IllegalStateException("Le service IA a retourné une réponse vide");
+            }
+            return response;
+        } catch (RestClientException exception) {
+            throw new AiServiceUnavailableException("Le service IA local est indisponible", exception);
+        }
+    }
+
+    public AiChatResponse confirmAction(AiActionConfirmRequest request) {
+        try {
+            AiChatResponse response = client().post()
+                    .uri("/api/ai/action/confirm")
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(request)
                     .retrieve()
